@@ -11,6 +11,7 @@
 namespace llvm{
   class Type;
   class Value;
+  class PHINode;
   class BasicBlock;
   class Attribute;
   class Instruction;
@@ -191,6 +192,7 @@ private:
   std::map<ir::value*, BasicBlock *> bbs_;
   std::map<ir::value*, std::vector<int>> ords_;
 
+  std::vector<std::tuple<llvm::PHINode*, Value*, ir::basic_block*>> lazy_phi_incs_;
 };
 
 }

@@ -244,8 +244,9 @@ std::string cu_module::compile_llvm_module(llvm::Module* module, driver::device*
   init_llvm();
   // verify and store llvm
   llvm::legacy::PassManager pm;
-  pm.add(llvm::createVerifierPass());
-  pm.run(*module);
+//  pm.add(llvm::createPrintModulePass(llvm::outs()));
+//  pm.add(llvm::createVerifierPass());
+//  pm.run(*module);
   // create machine
   module->setTargetTriple(triple);
   std::string error;
@@ -285,50 +286,50 @@ void cu_module::init_from_ptx(const std::string& ptx) {
 //  std::cout << ptx << std::endl;
 
   try{
-//    // compile ptx with ptxas
-//    char _fsrc[] = "/tmp/triton_k_XXXXXX";
-//    char _flog[] = "/tmp/triton_l_XXXXXX";
-//    int fdsrc = mkstemp(_fsrc);
-//    int fdlog = mkstemp(_flog);
-//    std::string fsrc = _fsrc;
-//    std::string flog = _flog;
-//    std::ofstream ofs(fsrc);
-//    ofs << ptx;
-//    ofs.close();
-//    std::string cmd;
-//    int err;
+    // compile ptx with ptxas
+    char _fsrc[] = "/tmp/triton_k_XXXXXX";
+    char _flog[] = "/tmp/triton_l_XXXXXX";
+    int fdsrc = mkstemp(_fsrc);
+    int fdlog = mkstemp(_flog);
+    std::string fsrc = _fsrc;
+    std::string flog = _flog;
+    std::ofstream ofs(fsrc);
+    ofs << ptx;
+    ofs.close();
+    std::string cmd;
+    int err;
 //    driver::cu_device* cu_device = (driver::cu_device*)device;
-//    cmd = "ptxas -v --gpu-name=sm_" + std::to_string(cu_device->compute_capability()) + " " + fsrc + " -o " + fsrc + ".o 2> " + flog;
-//    err = system(cmd.c_str());
-//    dispatch::cuModuleLoad(&*cu_, (fsrc + ".o").c_str());
-//    std::ifstream file(flog);
-//    std::string log;
-//    if(file)
-//      while (!file.eof()) log.push_back(file.get());
-//    unlink(_fsrc);
-//    unlink(_flog);
+    cmd = "ptxas -v --gpu-name=sm_70 " + fsrc + " -o " + fsrc + ".o 2> " + flog;
+    err = system(cmd.c_str());
+    dispatch::cuModuleLoad(&*cu_, (fsrc + ".o").c_str());
+    std::ifstream file(flog);
+    std::string log;
+    if(file)
+      while (!file.eof()) log.push_back(file.get());
+    unlink(_fsrc);
+    unlink(_flog);
 
-//    std::smatch match;
-//    std::regex expr ("\\b([0-9]+) bytes spill");
-//    spilled_ = 0;
-//    while (std::regex_search (log,match,expr)){
-//      spilled_ += std::stoi(match[1]);
-//      log = match.suffix();
-//    }
-//    std::cout << log << std::endl;
-//    std::cout << ptx_ << std::endl;
+    std::smatch match;
+    std::regex expr ("\\b([0-9]+) bytes spill");
+    spilled_ = 0;
+    while (std::regex_search (log,match,expr)){
+      spilled_ += std::stoi(match[1]);
+      log = match.suffix();
+    }
+    std::cout << log << std::endl;
+    std::cout << ptx_ << std::endl;
 
-    CUjit_option opt[] = {CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES, CU_JIT_ERROR_LOG_BUFFER,
-                          CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES, CU_JIT_INFO_LOG_BUFFER,
-                          CU_JIT_LOG_VERBOSE};
-    unsigned int errbufsize = 8192;
-    unsigned int logbufsize = 8192;
-    char _err[errbufsize];
-    char _log[logbufsize];
-    void* optval[] = {(void*)(uintptr_t)errbufsize, (void*)_err, (void*)(uintptr_t)logbufsize, (void*)_log, (void*)1};
-    dispatch::cuModuleLoadDataEx(&*cu_, ptx_.data(), 5, opt, optval);
-    std::string err(_err);
-    std::string log(_log);
+//    CUjit_option opt[] = {CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES, CU_JIT_ERROR_LOG_BUFFER,
+//                          CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES, CU_JIT_INFO_LOG_BUFFER,
+//                          CU_JIT_LOG_VERBOSE};
+//    unsigned int errbufsize = 8192;
+//    unsigned int logbufsize = 8192;
+//    char _err[errbufsize];
+//    char _log[logbufsize];
+//    void* optval[] = {(void*)(uintptr_t)errbufsize, (void*)_err, (void*)(uintptr_t)logbufsize, (void*)_log, (void*)1};
+//    dispatch::cuModuleLoadDataEx(&*cu_, ptx_.data(), 5, opt, optval);
+//    std::string err(_err);
+//    std::string log(_log);
 //    std::smatch match;
 //    std::regex expr ("\\b([0-9]+) bytes spill");
 //    spilled_ = 0;

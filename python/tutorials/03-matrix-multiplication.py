@@ -137,7 +137,6 @@ def swish(x):
 @triton.autotune(
     configs=[
         triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128, 'BLOCK_K': 32, 'GROUP_M': 8}, num_warps=4),
-        triton.Config({'BLOCK_M': 64, 'BLOCK_N': 128, 'BLOCK_K': 32, 'GROUP_M': 8}, num_warps=4),
     ],
     key=['M', 'N', 'K'],
 )
@@ -216,11 +215,11 @@ def matmul(a, b, activation=None):
 #
 # We can test our custom matrix multiplication operation against a native torch implementation (i.e., cuBLAS + custom element-wise swish kernel)
 
-#torch.manual_seed(0)
-a = torch.randn((512, 512), device='cuda', dtype=torch.float16)
-b = torch.randn((512, 512), device='cuda', dtype=torch.float16)
-c_0 = matmul(a, b, activation=swish)
-c_1 = torch.nn.SiLU()(torch.matmul(a, b))
+torch.manual_seed(0)
+a = torch.ones((512, 512), device='cuda', dtype=torch.float16)
+b = torch.ones((512, 512), device='cuda', dtype=torch.float16)
+c_0 = matmul(a, b)
+c_1 = torch.matmul(a, b)
 print(c_0)
 print(c_1)
 print(triton.testing.allclose(c_0, c_1))
@@ -237,7 +236,7 @@ print(triton.testing.allclose(c_0, c_1))
 @triton.testing.perf_report(
     triton.testing.Benchmark(
         x_names=['M', 'N', 'K'],  # argument names to use as an x-axis for the plot
-        x_vals=[256 * i for i in range(2, 33)],  # different possible values for `x_name`
+        x_vals=[8192],  # different possible values for `x_name`
         y_name='provider',  # argument name whose value corresponds to a different line in the plot
         y_vals=['cublas', 'triton'],  # possible keys for `y_name`
         y_lines=["cuBLAS", "Triton"],  # label name for the lines
